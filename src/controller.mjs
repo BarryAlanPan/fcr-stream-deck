@@ -16,7 +16,7 @@ export class DeckController {
     } });
   }
   render(context, key) {
-    const image = keyImage(stateFor(key.action, key.client, key.settings));
+    const image = keyImage(stateFor(key.action, key.client));
     if (image !== key.image) { key.image = image; this.send({ event: 'setImage', context, payload: { image, target: 0 } }); }
     if (key.inspector) this.status(context, key);
   }
@@ -50,7 +50,7 @@ export class DeckController {
     }
     if (event.event === 'keyDown') {
       if (!key.client) { this.send({ event: 'showAlert', context: event.context }); return; }
-      const ok = key.action.id === 'status' ? await key.client.poll() : await key.client.command(key.action.id, key.settings);
+      const ok = await key.client.command(key.action.id);
       if (!ok) this.send({ event: 'showAlert', context: event.context });
     }
   }

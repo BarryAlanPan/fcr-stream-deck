@@ -1,7 +1,4 @@
-import { seekPercent } from './actions.mjs';
-
 export const GLYPHS = {
-  connection: '<path d="M25 12v18M14 18a17 17 0 1 0 22 0"/>',
   startrecord: '<circle cx="25" cy="25" r="15" fill="currentColor" stroke="none"/>',
   play: '<path d="M15 9L41 25 15 41Z" fill="currentColor" stroke="none"/>',
   pause: '<path d="M17 10v30M33 10v30" stroke-width="9"/>',
@@ -15,32 +12,23 @@ export const GLYPHS = {
   takeControl: '<path d="M25 5v35M6 25l19-10 19 10M15 44l10-6 10 6"/>',
   cameraCycle: '<rect x="5" y="15" width="30" height="25" rx="4"/><path d="M35 23l11-7v23l-11-7M12 15l4-7h10l4 7"/>',
   ghost: '<path d="M9 43V21a16 16 0 0 1 32 0v22l-8-5-8 5-8-5Z"/><path d="M19 21v4M31 21v4"/>',
-  refresh: '<path d="M9 19a18 18 0 0 1 31-7l5 7M45 5v14H31M41 31A18 18 0 0 1 10 38l-5-7M5 45V31h14"/>',
-  seek: '<path d="M5 25h40M33 14l12 11-12 11M5 9v32"/>',
   status: '<circle cx="25" cy="25" r="19"/><path d="M25 23v14M25 13v2"/>',
 };
-export function stateFor(action, client, settings = {}) {
+export function stateFor(action, client) {
   let title = action.title, state = 'ready', active = false, glyph = action.id;
   if (!client) return { title, state: 'config', active, glyph };
   const snapshot = client.snapshot, current = snapshot?.actions[action.id];
   const recording = !!snapshot?.actions.startrecord.active;
   if (action.id === 'startrecord' && recording) title = 'Stop rec';
-  if (action.id === 'connection' && current) title = current.active ? 'Disconnect' : 'Connect';
   if (action.id === 'play' && current) {
     title = /^pause/i.test(current.label) ? 'Pause' : /^resume/i.test(current.label) ? 'Resume' : 'Play';
     if (title === 'Pause') glyph = 'pause';
   }
-  if (action.id === 'seek') title = `${seekPercent(settings) ?? '?'}%`;
   active = !!current?.active || (action.id === 'play' && title === 'Pause');
   if (action.id === 'startrecord') active = recording;
   let enabled = !!current && !current.disabled;
   if (action.id === 'startrecord' && recording) enabled = !!snapshot.actions.stop && !snapshot.actions.stop.disabled;
   if (action.id === 'play' && recording) enabled = false;
-  if (action.id === 'seek') enabled = !!snapshot?.timeline && !snapshot.timeline.disabled && !recording && seekPercent(settings) !== null;
-  if (action.id === 'status') {
-    enabled = true; active = !!snapshot?.actions.connection.active;
-    title = recording ? 'Recording' : active ? 'Connected' : 'FCR';
-  }
   if (client.phase === 'preparing') state = 'checking';
   else if (client.phase === 'sending') state = 'sending';
   else if (client.busy) state = 'checking';

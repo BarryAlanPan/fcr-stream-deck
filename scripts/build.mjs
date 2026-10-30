@@ -27,7 +27,7 @@ for (const [suffix, size] of [['', 256], ['@2x', 512]]) {
 await writeFile(new URL('ui/actions.js', plugin), `window.fcrActions = ${JSON.stringify(Object.fromEntries(ACTIONS.map(a => [a.uuid, { name: a.name, description: a.description }])))};\n`);
 const manifest = {
   $schema: 'https://schemas.elgato.com/streamdeck/plugins/manifest.json', UUID: PLUGIN_ID,
-  Name: 'FlightControlReplay', Version: '1.0.0.0', Author: 'FCR Stream Deck Contributors',
+  Name: 'FlightControlReplay', Version: '1.0.1.0', Author: 'FCR Stream Deck Contributors',
   Description: 'Control FlightControlReplay directly through its local HTTP server.',
   Category: 'FlightControlReplay', CategoryIcon: 'imgs/takeControl', Icon: 'imgs/plugin',
   CodePath: 'bin/plugin.cjs', Nodejs: { Version: '20' }, SDKVersion: 2,

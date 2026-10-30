@@ -1,4 +1,4 @@
-import { normalizeUrl, seekPercent } from './actions.mjs';
+import { normalizeUrl } from './actions.mjs';
 import { parsePage } from './parser.mjs';
 import { request } from './http.mjs';
 
@@ -49,7 +49,7 @@ export class FcrClient {
     else this.phase = this.busy ? 'confirming' : 'offline';
     this.emit(); this.schedule(); return ok;
   }
-  async command(name, settings = {}) {
+  async command(name) {
     if (this.closed || this.busy || !this.healthy) return false;
     // Lock before awaiting, including across duplicate keys and different actions.
     this.busy = true; this.phase = 'preparing'; clearTimeout(this.timer); this.emit();
@@ -61,16 +61,8 @@ export class FcrClient {
     let url, body, type = 'application/x-www-form-urlencoded';
     const recording = this.snapshot.actions.startrecord.active;
     if (name === 'startrecord' && recording) name = 'stop';
-    if (name === 'seek') {
-      const range = this.snapshot.timeline, percent = seekPercent(settings);
-      if (range && !range.disabled && !recording && percent !== null) {
-        const value = Math.max(range.min, Math.min(range.max, Math.round(range.min + (range.max - range.min) * percent / 100)));
-        url = `${this.url}slider_update?${encodeURIComponent(value)}`; body = String(value); type = 'application/json';
-      }
-    } else {
-      const action = this.snapshot.actions[name];
-      if (action && !action.disabled && !(name === 'play' && recording)) ({ url, body } = action);
-    }
+    const action = this.snapshot.actions[name];
+    if (action && !action.disabled && !(name === 'play' && recording)) ({ url, body } = action);
     if (!url) { this.busy = false; this.phase = 'ready'; this.emit(); this.schedule(); return false; }
     this.phase = 'sending'; this.warning = ''; this.emit();
     try {

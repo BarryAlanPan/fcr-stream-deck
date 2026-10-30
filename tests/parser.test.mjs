@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parsePage } from '../src/parser.mjs';
-import { normalizeUrl, seekPercent } from '../src/actions.mjs';
+import { ACTIONS, normalizeUrl } from '../src/actions.mjs';
+import { stateFor } from '../src/render.mjs';
 export const connected = readFileSync(new URL('fixtures/connected.html', import.meta.url), 'utf8');
 export const recording = readFileSync(new URL('fixtures/recording.html', import.meta.url), 'utf8');
 const disconnected = readFileSync(new URL('fixtures/disconnected.html', import.meta.url), 'utf8');
@@ -51,9 +52,22 @@ test('server aliases share a lock identity and invalid configuration is rejected
   assert.equal(normalizeUrl('http://localhost:8085'), 'http://127.0.0.1:8085/');
   assert.equal(normalizeUrl('http://[::1]:8085/'), 'http://127.0.0.1:8085/');
   for (const value of ['https://localhost:8085/', 'http://example.com/', 'http://user@localhost/', 'http://localhost/path', 'http://localhost/?q=x']) assert.throws(() => normalizeUrl(value));
-  assert.equal(seekPercent({}), 50);
-  for (const value of ['', ' ', null, 'bad', -1, 101, {}, true]) {
-    if (value === null) continue; // An unset/null setting uses the default.
-    assert.equal(seekPercent({ position: value }), null);
+});
+
+test('remaining keys carry availability and recording state without utility keys', () => {
+  for (const id of ['stop', 'seek', 'status', 'refresh', 'connection']) {
+    assert.ok(!ACTIONS.some(action => action.id === id));
   }
+  const record = ACTIONS.find(action => action.id === 'startrecord');
+  const play = ACTIONS.find(action => action.id === 'play');
+  const client = { healthy: true, phase: 'ready', snapshot: parsePage(disconnected) };
+  assert.equal(stateFor(record, client).state, 'disabled');
+  client.snapshot = parsePage(connected);
+  assert.equal(stateFor(record, client).state, 'ready');
+  client.snapshot = parsePage(recording);
+  assert.equal(stateFor(record, client).title, 'Stop rec');
+  assert.equal(stateFor(record, client).state, 'active');
+  assert.equal(stateFor(play, client).state, 'disabled');
+  client.healthy = false; client.phase = 'offline';
+  assert.equal(stateFor(record, client).state, 'offline');
 });

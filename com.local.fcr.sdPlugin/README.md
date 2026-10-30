@@ -1,13 +1,13 @@
 # FlightControlReplay for Stream Deck
 
-Stream Deck keys that control FlightControlReplay (FCR) by sending requests directly to its local HTTP server. Includes live status, recording and playback controls, replay tools, and configurable replay-position keys.
+Stream Deck keys that control FlightControlReplay (FCR) by sending requests directly to its local HTTP server. Includes recording and playback controls and replay tools, with live availability and status shown on each key.
 
 ## Install
 
 1. Install **dist/com.local.fcr.streamDeckPlugin** by double-clicking it and accepting Stream Deck's installation prompt.
 2. Start FCR with its HTTP server available at `http://127.0.0.1:8085/`.
 3. In Stream Deck, expand **FlightControlReplay** and drag actions onto your keys.
-4. Use **Connection** to connect FCR to the simulator when needed.
+4. Keys automatically read FCR's state and become available when their controls are enabled in FCR.
 
 Requires Windows 10 or later and Stream Deck 6.6 or later. Stream Deck supplies the Node 20 runtime; Node and npm are needed only for development. Buttons work on keypad devices, including Stream Deck Mobile. Dial/touchscreen actions are not included.
 
@@ -17,21 +17,16 @@ The plugin's Node process makes the requests, so the Flow CORS patch is **not re
 
 | Action | Behavior |
 | --- | --- |
-| Connection | Connect/disconnect, following FCR's current form |
 | Record / Stop | Start recording; stop when FCR reports an active recording |
 | Play / Pause | Play, pause, or resume according to FCR; blocked while recording |
-| Stop | Stop recording or playback |
 | Load Replay | Open FCR's desktop file picker |
 | Go to Start / Go to End | Native replay start/end actions |
 | Backward / Forward | Native FCR steps; no assumed time interval |
 | ReLive / Take Control / CinematicR / Ghost | Native actions with confirmed active state |
-| Refresh FCR | Send FCR's native Refresh command |
-| Seek to Position | Jump to the configured percentage of the live slider range |
-| Status / Retry | Show connection/recording state; press for a read-only status retry |
 
-Load and Stop can open desktop file dialogs. Bring FCR forward and complete its native load/save workflow. The plugin does not choose files or dismiss dialogs.
+Loading a replay or stopping a recording can open desktop file dialogs. Bring FCR forward and complete its native load/save workflow. The plugin does not choose files or dismiss dialogs.
 
-The property inspector has a local server URL (default `http://127.0.0.1:8085/`) and, for Seek, a position from 0 to 100. Press **Save settings** after editing. Localhost aliases are normalized to IPv4 so keys share one connection and command lock. Only local HTTP root URLs are supported. The position is a percentage of FCR's range, not seconds; it is rounded to an integer slider value.
+The property inspector has a local server URL (default `http://127.0.0.1:8085/`). Press **Save settings** after editing. Localhost aliases are normalized to IPv4 so keys share one connection and command lock. Only local HTTP root URLs are supported.
 
 Keys show active, disabled, reading, sending, checking, and offline states. Recording is red; other active controls are green. **CHECK FCR** means a command's response was not confirmed and the command may have run. Review FCR before repeating it; clear the warning with **I checked FCR** in the property inspector. **Retry status** only reads state and never repeats a command.
 
@@ -44,7 +39,6 @@ FCR's HTML interface is observed behavior, not a versioned public API. This impl
 - GET the root page and parse inert HTML using parse5. Never execute returned scripts.
 - Discover allowlisted form action paths with their current GUID, named submit/hidden values, labels, disabled flags and `activated` classes.
 - Before each command, perform a fresh GET and recheck availability. Send one form-encoded POST to the discovered URL.
-- Seek posts the integer value as an `application/json` body to `slider_update?<value>`.
 - Read fresh state after POST. Keep controls locked until a valid page is read, even after a timeout. Never retry POST automatically.
 
 All keys for a server share a synchronous command lock. Concurrent presses are rejected, not queued. Polling runs every two seconds while keys are visible, with five-second retry after failures and an eight-second absolute request deadline. Hiding keys stops polling but lets an in-flight command finish and preserves its warning/lock across profile changes. Starting the plugin never connects the simulator, records, or plays automatically.

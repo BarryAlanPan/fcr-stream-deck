@@ -24,10 +24,9 @@ test('fresh tokens and exact named bodies are used; POST is followed by GET', as
   assert.equal(posts()[0][2], 'play=Pause');
   assert.equal(client.busy, false);
 });
-test('record toggles to stop; play and seek never interrupt recording', async t => {
+test('record toggles to stop; play never interrupts recording', async t => {
   const { client, posts } = await setup(t, () => recording);
   assert.equal(await client.command('play'), false);
-  assert.equal(await client.command('seek', { position: 30 }), false);
   assert.equal(posts().length, 0);
   assert.equal(await client.command('startrecord'), true);
   assert.match(posts()[0][1], /\/stop/);
@@ -78,16 +77,6 @@ test('uncertain POST is never retried; failed confirmations retain lock until va
   assert.equal(client.busy, false); assert.equal(client.healthy, true);
   assert.match(client.warning, /may have run/);
   client.acknowledge(); assert.equal(client.warning, '');
-});
-test('seek uses live bounds and exact JSON body/query; invalid values do not post', async t => {
-  const { client, posts } = await setup(t, () => connected);
-  await client.command('seek', { position: 50 });
-  assert.match(posts()[0][1], /slider_update\?546$/);
-  assert.equal(posts()[0][2], '546'); assert.equal(posts()[0][3], 'application/json');
-  for (const position of [NaN, Infinity, '', -1, 101]) assert.equal(await client.command('seek', { position }), false);
-  assert.equal(posts().length, 1);
-  await client.command('seek', { position: 0 }); assert.equal(posts()[1][2], '1');
-  await client.command('seek', { position: 100 }); assert.equal(posts()[2][2], '1090');
 });
 test('profile switch preserves in-flight POST and shared lock, then stops polling', async t => {
   const gate = deferred();

@@ -91,3 +91,42 @@ test('profile switch preserves in-flight POST and shared lock, then stops pollin
   assert.equal(client.busy, false); assert.equal(posts().length, 1);
   unsubscribe(); assert.equal(client.timer, null);
 });
+
+test('dial seeks from fresh position, sends native JSON bytes and clamps both bounds', async t => {
+  let page = connected;
+  const { client, posts } = await setup(t, () => page);
+  page = connected.replace('value="0" class="slider"', 'value="546" class="slider"');
+  assert.equal(await client.command('seek', 2), true);
+  assert.deepEqual(posts()[0].slice(0, 4), ['POST', 'http://127.0.0.1:8085/slider_update?568', '568', 'application/json']);
+  await client.command('seek', 1000); assert.equal(posts()[1][2], '1090');
+  await client.command('seek', -1000); assert.equal(posts()[2][2], '1');
+  page = connected;
+  assert.equal(await client.command('seek', -1), true);
+  assert.equal(posts().length, 3, 'Already at boundary: no POST');
+});
+
+test('seek and replay toggle recheck recording, availability and malformed input', async t => {
+  let page = connected;
+  const { client, posts } = await setup(t, () => page);
+  for (const invalid of [NaN, Infinity, 1.5, '2', 0]) assert.equal(await client.command('seek', invalid), false);
+  for (const html of [recording, disconnected, connected.replace('max="1090"', 'max="0"'),
+    connected.replace('id="sliderRange"', 'disabled id="sliderRange"')]) {
+    page = html; assert.equal(await client.command('seek', 1), false);
+  }
+  page = recording;
+  assert.equal(await client.command('replay'), false);
+  assert.equal(posts().length, 0);
+});
+
+test('replay dial starts, stops playing, and resumes using fresh native actions', async t => {
+  let page = connected;
+  const { client, posts } = await setup(t, () => page);
+  await client.command('replay'); assert.equal(posts()[0][2], 'play=Play');
+  page = connected.replaceAll(token, nextToken).replace('value="Play"', 'value="Pause"');
+  await client.command('replay'); assert.match(posts()[1][1], new RegExp(`/stop${nextToken}$`));
+  assert.equal(posts()[1][2], '');
+  page = connected.replace('value="Play"', 'value="Resume"');
+  await client.command('replay'); assert.equal(posts()[2][2], 'play=Resume');
+  page = connected.replace('value="Play"', 'value="Pause"').replace('value="Stop"', 'disabled value="Stop"');
+  assert.equal(await client.command('replay'), false); assert.equal(posts().length, 3);
+});

@@ -27,14 +27,17 @@ for (const [suffix, size] of [['', 256], ['@2x', 512]]) {
 await writeFile(new URL('ui/actions.js', plugin), `window.fcrActions = ${JSON.stringify(Object.fromEntries(ACTIONS.map(a => [a.uuid, { name: a.name, description: a.description }])))};\n`);
 const manifest = {
   $schema: 'https://schemas.elgato.com/streamdeck/plugins/manifest.json', UUID: PLUGIN_ID,
-  Name: 'FlightControlReplay', Version: '1.0.1.0', Author: 'FCR Stream Deck Contributors',
+  Name: 'FlightControlReplay', Version: '1.1.0.0', Author: 'FCR Stream Deck Contributors',
   Description: 'Control FlightControlReplay directly through its local HTTP server.',
   Category: 'FlightControlReplay', CategoryIcon: 'imgs/takeControl', Icon: 'imgs/plugin',
   CodePath: 'bin/plugin.cjs', Nodejs: { Version: '20' }, SDKVersion: 2,
   Software: { MinimumVersion: '6.6' }, OS: [{ Platform: 'windows', MinimumVersion: '10' }],
   PropertyInspectorPath: 'ui/settings.html',
   Actions: ACTIONS.map(action => ({ UUID: action.uuid, Name: action.name, Tooltip: action.description,
-    Icon: `imgs/${action.id}`, Controllers: ['Keypad'], SupportedInMultiActions: false,
+    Icon: `imgs/${action.id}`, Controllers: [action.id === 'replay' ? 'Encoder' : 'Keypad'], SupportedInMultiActions: false,
+    ...(action.id === 'replay' ? { Encoder: { layout: 'layouts/replay.json', TriggerDescription: {
+      Push: 'Start / Stop replay', Rotate: 'Seek backward / forward (1% per tick)', Touch: 'Start / Stop replay',
+    } } } : {}),
     DisableAutomaticStates: true, UserTitleEnabled: false,
     States: [{ Image: `imgs/${action.id}-key`, ShowTitle: false }] })),
 };

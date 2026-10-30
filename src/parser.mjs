@@ -54,7 +54,8 @@ export function parsePage(html, baseUrl = DEFAULT_URL) {
     throw new Error('Unrecognized FCR page');
   }
   const fields = nodes.filter(n => n.tagName === 'fieldset' && !descendants(n).some(c => ['form', 'input', 'button', 'legend'].includes(c.tagName)));
-  const range = nodes.find(n => n.tagName === 'input' && attr(n, 'id') === 'sliderRange');
+  const ranges = nodes.filter(n => n.tagName === 'input' && attr(n, 'id') === 'sliderRange');
+  const range = ranges.length === 1 && attr(ranges[0], 'type')?.trim().toLowerCase() === 'range' ? ranges[0] : null;
   let timeline = null;
   if (range && ['min', 'max', 'value'].every(a => has(range, a) && attr(range, a).trim() !== '')) {
     const [min, max, value] = ['min', 'max', 'value'].map(a => Number(attr(range, a)));

@@ -1,6 +1,7 @@
 import { normalizeUrl } from './actions.mjs';
 import { parsePage } from './parser.mjs';
 import { request } from './http.mjs';
+import { canSeek, replayCommand, seekValue } from './replay.mjs';
 
 export class FcrClient {
   constructor(url, { transport = request, pollMs = 2000, retryMs = 5000, timeout = 8000 } = {}) {
@@ -49,7 +50,7 @@ export class FcrClient {
     else this.phase = this.busy ? 'confirming' : 'offline';
     this.emit(); this.schedule(); return ok;
   }
-  async command(name) {
+  async command(name, ticks) {
     if (this.closed || this.busy || !this.healthy) return false;
     // Lock before awaiting, including across duplicate keys and different actions.
     this.busy = true; this.phase = 'preparing'; clearTimeout(this.timer); this.emit();
@@ -60,9 +61,19 @@ export class FcrClient {
     }
     let url, body, type = 'application/x-www-form-urlencoded';
     const recording = this.snapshot.actions.startrecord.active;
+    if (name === 'replay' && !recording) name = replayCommand(this.snapshot);
     if (name === 'startrecord' && recording) name = 'stop';
     const action = this.snapshot.actions[name];
     if (action && !action.disabled && !(name === 'play' && recording)) ({ url, body } = action);
+    if (name === 'seek' && Number.isSafeInteger(ticks) && ticks !== 0 && canSeek(this.snapshot)) {
+      const value = seekValue(this.snapshot.timeline, ticks);
+      if (value !== this.snapshot.timeline.value) {
+        body = String(value); type = 'application/json';
+        url = new URL(`slider_update?${body}`, this.url).href;
+      } else {
+        this.busy = false; this.phase = 'ready'; this.emit(); this.schedule(); return true;
+      }
+    }
     if (!url) { this.busy = false; this.phase = 'ready'; this.emit(); this.schedule(); return false; }
     this.phase = 'sending'; this.warning = ''; this.emit();
     try {

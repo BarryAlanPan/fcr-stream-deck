@@ -1,6 +1,7 @@
 import { BY_UUID, normalizeUrl } from './actions.mjs';
 import { FcrClient } from './client.mjs';
-import { keyImage, stateFor } from './render.mjs';
+import { dialImage, keyImage, stateFor } from './render.mjs';
+import { canSeek } from './replay.mjs';
 
 export class DeckController {
   constructor(send, createClient = url => new FcrClient(url)) {
@@ -16,15 +17,21 @@ export class DeckController {
     } });
   }
   render(context, key) {
-    const image = keyImage(stateFor(key.action, key.client));
-    if (image !== key.image) { key.image = image; this.send({ event: 'setImage', context, payload: { image, target: 0 } }); }
+    const dial = key.action.id === 'replay';
+    const image = dial ? dialImage(key.client, key.pendingTicks) : keyImage(stateFor(key.action, key.client));
+    if (image !== key.image) {
+      key.image = image;
+      this.send(dial ? { event: 'setFeedback', context, payload: { replay: image } } :
+        { event: 'setImage', context, payload: { image, target: 0 } });
+    }
     if (key.inspector) this.status(context, key);
   }
   attach(event) {
     const action = BY_UUID.get(event.action);
     if (!action) return;
     const previous = this.keys.get(event.context);
-    const key = { action, settings: event.payload?.settings || {}, inspector: previous?.inspector || false };
+    const key = { action, settings: event.payload?.settings || {}, inspector: previous?.inspector || false, pendingTicks: 0 };
+    if (previous) this.cancelSeek(previous);
     try {
       const url = normalizeUrl(key.settings.serverUrl);
       if (!this.clients.has(url)) this.clients.set(url, this.createClient(url));
@@ -36,11 +43,40 @@ export class DeckController {
     else this.render(event.context, key);
     previous?.unsubscribe?.();
   }
+  cancelSeek(key) { clearTimeout(key.seekTimer); key.seekTimer = null; key.pendingTicks = 0; }
+  rotate(context, key, ticks) {
+    if (!Number.isSafeInteger(ticks) || !ticks) return;
+    const client = key.client;
+    if (!client || (!client.healthy && !(key.seeking && client.busy)) || client.warning ||
+        !canSeek(client.snapshot) || (client.busy && !key.seeking)) {
+      this.send({ event: 'showAlert', context }); return;
+    }
+    // Batch rapid turns and keep new ticks while this dial's own seek is in flight.
+    key.pendingTicks = Math.max(-100, Math.min(100, key.pendingTicks + ticks));
+    this.render(context, key);
+    if (!key.seekTimer && !key.seeking) {
+      key.seekTimer = setTimeout(() => void this.flushSeek(context, key), 120);
+    }
+  }
+  async flushSeek(context, key) {
+    key.seekTimer = null;
+    if (this.keys.get(context) !== key || !key.pendingTicks) return;
+    const ticks = key.pendingTicks; key.pendingTicks = 0; key.seeking = true;
+    const ok = await key.client.command('seek', ticks);
+    key.seeking = false;
+    if (this.keys.get(context) !== key) return;
+    if (!ok || !key.client.healthy || key.client.busy || key.client.warning) {
+      this.cancelSeek(key); this.send({ event: 'showAlert', context });
+    } else if (key.pendingTicks) {
+      key.seekTimer = setTimeout(() => void this.flushSeek(context, key), 120);
+    }
+    this.render(context, key);
+  }
   async handle(event) {
     if (event.event === 'willAppear' || event.event === 'didReceiveSettings') { this.attach(event); return; }
     const key = this.keys.get(event.context);
     if (!key) return;
-    if (event.event === 'willDisappear') { key.unsubscribe?.(); this.keys.delete(event.context); return; }
+    if (event.event === 'willDisappear') { this.cancelSeek(key); key.unsubscribe?.(); this.keys.delete(event.context); return; }
     if (event.event === 'propertyInspectorDidAppear') { key.inspector = true; this.status(event.context, key); }
     if (event.event === 'propertyInspectorDidDisappear') key.inspector = false;
     if (event.event === 'sendToPlugin') {
@@ -48,11 +84,20 @@ export class DeckController {
       if (event.payload?.type === 'retry') await key.client?.poll();
       if (event.payload?.type === 'acknowledge') key.client?.acknowledge();
     }
-    if (event.event === 'keyDown') {
+    if (key.action.id === 'replay' && event.event === 'dialRotate') {
+      this.rotate(event.context, key, event.payload?.ticks); return;
+    }
+    const dialClick = key.action.id === 'replay' && ['dialDown', 'touchTap'].includes(event.event);
+    if (dialClick || (event.event === 'keyDown' && key.action.id !== 'replay')) {
+      if (dialClick) this.cancelSeek(key);
       if (!key.client) { this.send({ event: 'showAlert', context: event.context }); return; }
       const ok = await key.client.command(key.action.id);
       if (!ok) this.send({ event: 'showAlert', context: event.context });
     }
   }
-  close() { for (const client of this.clients.values()) client.close(); this.keys.clear(); }
+  close() {
+    for (const key of this.keys.values()) this.cancelSeek(key);
+    for (const client of this.clients.values()) client.close();
+    this.keys.clear();
+  }
 }

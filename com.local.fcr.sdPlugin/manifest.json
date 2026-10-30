@@ -2,7 +2,7 @@
   "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
   "UUID": "com.local.fcr",
   "Name": "FlightControlReplay",
-  "Version": "1.0.1.0",
+  "Version": "1.1.0.0",
   "Author": "FCR Stream Deck Contributors",
   "Description": "Control FlightControlReplay directly through its local HTTP server.",
   "Category": "FlightControlReplay",
@@ -56,6 +56,32 @@
       "States": [
         {
           "Image": "imgs/play-key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.local.fcr.replay",
+      "Name": "Replay Dial",
+      "Tooltip": "Turn to seek (1% per tick). Press the dial or tap its display to start/stop replay.",
+      "Icon": "imgs/replay",
+      "Controllers": [
+        "Encoder"
+      ],
+      "SupportedInMultiActions": false,
+      "Encoder": {
+        "layout": "layouts/replay.json",
+        "TriggerDescription": {
+          "Push": "Start / Stop replay",
+          "Rotate": "Seek backward / forward (1% per tick)",
+          "Touch": "Start / Stop replay"
+        }
+      },
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/replay-key",
           "ShowTitle": false
         }
       ]

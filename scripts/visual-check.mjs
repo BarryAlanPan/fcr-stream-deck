@@ -4,7 +4,7 @@ import { once } from 'node:events';
 import { access, mkdir, writeFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { ACTIONS } from '../src/actions.mjs';
-import { keySvg } from '../src/render.mjs';
+import { dialSvg, keySvg } from '../src/render.mjs';
 
 const candidates = [process.env.FCR_TEST_CHROME, 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', 'C:/Program Files/Google/Chrome/Application/chrome.exe'].filter(Boolean);
 let executablePath;
@@ -43,11 +43,22 @@ try {
   await page.waitForFunction(() => document.querySelector('#acknowledge').hidden);
   assert.ok(messages.some(m => m.payload?.type === 'acknowledge'));
   assert.deepEqual(errors, []);
-  const cards = ACTIONS.map(a => `<div>${keySvg({ title: a.title, glyph: a.id, state: ['startrecord', 'ghost'].includes(a.id) ? 'active' : 'ready', active: ['startrecord', 'ghost'].includes(a.id) })}<p>${a.name}</p></div>`).join('');
+  const cards = ACTIONS.filter(a => a.id !== 'replay').map(a => `<div>${keySvg({ title: a.title, glyph: a.id, state: ['startrecord', 'ghost'].includes(a.id) ? 'active' : 'ready', active: ['startrecord', 'ghost'].includes(a.id) })}<p>${a.name}</p></div>`).join('');
   const html = `<html><style>body{background:#0c121b;color:#b9cadb;font:14px Arial;padding:24px}main{display:grid;grid-template-columns:repeat(8,144px);gap:20px}p{max-width:144px;text-align:center}h1{color:white;font-size:24px}</style><h1>FlightControlReplay · Stream Deck controls</h1><main>${cards}</main></html>`;
   await writeFile(new URL('../test-results/keys.html', import.meta.url), html);
   await page.setViewportSize({ width: 1370, height: 540 }); await page.setContent(html);
   await page.screenshot({ path: new URL('../test-results/keys.png', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'), fullPage: true });
+  const dialClient = (value, overrides = {}) => ({ healthy: true, phase: 'ready', snapshot: {
+    timeline: { min: 0, max: 100, value, disabled: false },
+    actions: { play: { label: 'Play', disabled: false }, stop: { disabled: false }, startrecord: { active: false }, connection: { active: true } },
+  }, ...overrides });
+  const playing = dialClient(50); playing.snapshot.actions.play.label = 'Pause';
+  const recording = dialClient(24); recording.snapshot.actions.startrecord.active = true;
+  const dials = [dialClient(0), playing, dialClient(100), dialClient(50, { busy: true }),
+    dialClient(50, { healthy: false, phase: 'offline' }), recording, dialClient(50, { warning: 'timeout' }), null];
+  await page.setViewportSize({ width: 920, height: 300 });
+  await page.setContent(`<body style="background:#253347;display:grid;grid-template-columns:repeat(4,200px);gap:20px;padding:10px">${dials.map(c => dialSvg(c)).join('')}</body>`);
+  await page.screenshot({ path: new URL('../test-results/dials.png', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'), fullPage: true });
   console.log('Property inspector: registration, settings, validation, status, warning, acknowledgement and 340px layout passed.');
 } finally {
   await browser.close(); for (const socket of ws.clients) socket.terminate(); ws.close();

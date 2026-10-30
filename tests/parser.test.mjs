@@ -47,6 +47,8 @@ test('disabled fieldsets and invalid/missing slider bounds fail closed', () => {
   assert.equal(page.timeline.disabled, true);
   assert.equal(parsePage(connected.replace('max="1090"', 'max="NaN"')).timeline, null);
   assert.equal(parsePage(connected.replace('min="1"', '')).timeline, null);
+  assert.equal(parsePage(connected + '<input type="range" id="sliderRange" min="1" max="10" value="1">').timeline, null);
+  assert.equal(parsePage(connected.replace('type = "range"', 'type="text"')).timeline, null);
 });
 test('server aliases share a lock identity and invalid configuration is rejected', () => {
   assert.equal(normalizeUrl('http://localhost:8085'), 'http://127.0.0.1:8085/');

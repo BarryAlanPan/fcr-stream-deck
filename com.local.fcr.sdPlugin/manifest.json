@@ -1,0 +1,316 @@
+{
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+  "UUID": "com.local.fcr",
+  "Name": "FlightControlReplay",
+  "Version": "1.0.0.0",
+  "Author": "FCR Stream Deck Contributors",
+  "Description": "Control FlightControlReplay directly through its local HTTP server.",
+  "Category": "FlightControlReplay",
+  "CategoryIcon": "imgs/takeControl",
+  "Icon": "imgs/plugin",
+  "CodePath": "bin/plugin.cjs",
+  "Nodejs": {
+    "Version": "20"
+  },
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.6"
+  },
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "PropertyInspectorPath": "ui/settings.html",
+  "Actions": [
+    {
+      "UUID": "com.local.fcr.connection",
+      "Name": "Connection",
+      "Tooltip": "Connect or disconnect the simulator.",
+      "Icon": "imgs/connection",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/connection-key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.local.fcr.startrecord",
+      "Name": "Record / Stop",
+      "Tooltip": "Start recording; press again to stop recording. FCR may open its save dialog.",
+      "Icon": "imgs/startrecord",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/startrecord-key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.local.fcr.play",
+      "Name": "Play / Pause",
+      "Tooltip": "Play, pause, or resume using the current FCR action.",
+      "Icon": "imgs/play",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/play-key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.local.fcr.stop",
+      "Name": "Stop",
+      "Tooltip": "Stop playback or recording. FCR may open its save dialog.",
+      "Icon": "imgs/stop",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/stop-key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.local.fcr.loadr",
+      "Name": "Load Replay",
+      "Tooltip": "Open FCR’s desktop recording picker.",
+      "Icon": "imgs/loadR",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/loadR-key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.local.fcr.gostart",
+      "Name": "Go to Start",
+      "Tooltip": "Go to the start of the replay.",
+      "Icon": "imgs/goStart",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/goStart-key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.local.fcr.backw",
+      "Name": "Backward",
+      "Tooltip": "Use FCR’s native backward action.",
+      "Icon": "imgs/backw",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/backw-key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.local.fcr.forw",
+      "Name": "Forward",
+      "Tooltip": "Use FCR’s native forward action.",
+      "Icon": "imgs/forw",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/forw-key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.local.fcr.goend",
+      "Name": "Go to End",
+      "Tooltip": "Go to the end of the replay.",
+      "Icon": "imgs/goEnd",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/goEnd-key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.local.fcr.relive",
+      "Name": "ReLive",
+      "Tooltip": "Toggle ReLive.",
+      "Icon": "imgs/relive",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/relive-key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.local.fcr.takecontrol",
+      "Name": "Take Control",
+      "Tooltip": "Toggle Take Control.",
+      "Icon": "imgs/takeControl",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/takeControl-key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.local.fcr.cameracycle",
+      "Name": "CinematicR",
+      "Tooltip": "Toggle CinematicR.",
+      "Icon": "imgs/cameraCycle",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/cameraCycle-key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.local.fcr.ghost",
+      "Name": "Ghost",
+      "Tooltip": "Toggle Ghost.",
+      "Icon": "imgs/ghost",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/ghost-key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.local.fcr.refresh",
+      "Name": "Refresh FCR",
+      "Tooltip": "Invoke FCR’s native Refresh command.",
+      "Icon": "imgs/refresh",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/refresh-key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.local.fcr.seek",
+      "Name": "Seek to Position",
+      "Tooltip": "Jump to a configured percentage of the replay.",
+      "Icon": "imgs/seek",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/seek-key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.local.fcr.status",
+      "Name": "Status / Retry",
+      "Tooltip": "Show FCR status; press to retry a status read. Sends no control command.",
+      "Icon": "imgs/status",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/status-key",
+          "ShowTitle": false
+        }
+      ]
+    }
+  ]
+}

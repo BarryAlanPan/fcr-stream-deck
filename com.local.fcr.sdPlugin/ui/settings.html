@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>FCR Controls</title>
+<style>
+:root{color-scheme:dark;font:13px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#ddd;background:#2d2d2d}body{margin:16px}h1{font-size:16px;margin:0 0 4px}p{line-height:1.5;color:#bbb}label{display:block;margin:18px 0 6px}input{box-sizing:border-box;width:100%;padding:8px;background:#202020;color:#fff;border:1px solid #666;border-radius:4px}button{padding:7px 12px;background:#444;border:1px solid #666;border-radius:4px;color:#fff;cursor:pointer;margin:6px 4px 0 0}button:disabled{opacity:.5;cursor:default}input:focus,button:focus{outline:2px solid #69e3c0;outline-offset:2px}.status{padding:12px;background:#222;border-left:3px solid #69e3c0;margin-top:18px;overflow-wrap:anywhere}.error{color:#ffb6ac}.warning{color:#f3c66c}[hidden]{display:none!important}small{display:block;color:#aaa;margin:6px 0;line-height:1.5}#phase{font-weight:600}#description{margin-top:4px}
+</style></head><body>
+<h1 id="title">FlightControlReplay</h1><p id="description">Direct controls for your local FCR server.</p>
+<label for="server">FCR server</label><input id="server" type="url" placeholder="http://127.0.0.1:8085/" spellcheck="false"><small>Local HTTP URL. Keys using the same server share one command lock.</small>
+<div id="seek" hidden><label for="position">Replay position (%)</label><input id="position" type="number" min="0" max="100" step="any" value="50"><small>0 is the start; 100 is the end. Uses FCR’s current replay range.</small></div>
+<button id="save" disabled>Save settings</button><p id="validation" class="error" role="alert"></p>
+<div class="status" role="status" aria-live="polite"><div id="phase">Connecting to Stream Deck…</div><p id="status"></p><p id="error" class="error"></p><p id="warning" class="warning"></p></div>
+<button id="retry" disabled>Retry status</button><button id="acknowledge" hidden>I checked FCR</button>
+<small>Load and Stop can open FCR’s desktop file dialogs. Bring FCR forward to finish them.</small>
+<script src="actions.js"></script><script src="settings.js"></script></body></html>

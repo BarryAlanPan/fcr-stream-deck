@@ -27,6 +27,7 @@ try {
   await page.evaluate(port => window.connectElgatoStreamDeckSocket(port, 'test-inspector', 'registerPropertyInspector', '{}', JSON.stringify({ context: 'record-1', action: 'com.local.fcr.startrecord', payload: { settings: {} } })), ws.address().port);
   await page.getByText('FCR available', { exact: true }).waitFor();
   assert.equal(await page.locator('#position').count(), 0);
+  assert.equal(await page.locator('#dial-settings').isVisible(), false);
   await page.locator('#server').fill('http://example.com/'); await page.locator('#save').click();
   assert.match(await page.locator('#validation').textContent(), /local HTTP URL/);
   assert.equal(messages.filter(m => m.event === 'setSettings').length, 0);
@@ -42,6 +43,24 @@ try {
   await page.locator('#acknowledge').click();
   await page.waitForFunction(() => document.querySelector('#acknowledge').hidden);
   assert.ok(messages.some(m => m.payload?.type === 'acknowledge'));
+  assert.deepEqual(errors, []);
+  await page.reload();
+  await page.evaluate(port => window.connectElgatoStreamDeckSocket(port, 'dial-inspector', 'registerPropertyInspector', '{}', JSON.stringify({ context: 'dial-1', action: 'com.local.fcr.replay', payload: { settings: {} } })), ws.address().port);
+  await page.getByText('FCR available', { exact: true }).waitFor();
+  assert.equal(await page.locator('#step-percent').inputValue(), '2');
+  const savedBefore = messages.filter(m => m.event === 'setSettings').length;
+  for (const value of ['', '0', '101']) {
+    await page.locator('#step-percent').fill(value); await page.locator('#save').click();
+    assert.match(await page.locator('#validation').textContent(), /between 0.1% and 100%/);
+    assert.equal(messages.filter(m => m.event === 'setSettings').length, savedBefore);
+  }
+  await page.locator('#step-percent').fill('2.5'); await page.locator('#save').click();
+  await page.waitForFunction(() => document.querySelector('#validation').textContent === '');
+  assert.equal(messages.filter(m => m.event === 'setSettings').at(-1).payload.stepPercent, 2.5);
+  socket.send(JSON.stringify({ event: 'didReceiveSettings', payload: { settings: { stepPercent: 7.5 } } }));
+  await page.waitForFunction(() => document.querySelector('#step-percent').value === '7.5');
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await page.screenshot({ path: new URL('../test-results/dial-property-inspector.png', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'), fullPage: true });
   assert.deepEqual(errors, []);
   const cards = ACTIONS.filter(a => a.id !== 'replay').map(a => `<div>${keySvg({ title: a.title, glyph: a.id, state: ['startrecord', 'ghost'].includes(a.id) ? 'active' : 'ready', active: ['startrecord', 'ghost'].includes(a.id) })}<p>${a.name}</p></div>`).join('');
   const html = `<html><style>body{background:#0c121b;color:#b9cadb;font:14px Arial;padding:24px}main{display:grid;grid-template-columns:repeat(8,144px);gap:20px}p{max-width:144px;text-align:center}h1{color:white;font-size:24px}</style><h1>FlightControlReplay · Stream Deck controls</h1><main>${cards}</main></html>`;

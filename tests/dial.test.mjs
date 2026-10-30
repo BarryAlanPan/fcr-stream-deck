@@ -38,10 +38,10 @@ test('encoder feedback, batched turns, in-flight turns, single press and touch t
   let release; hold(new Promise(resolve => { release = resolve; }));
   await send('dialRotate', { ticks: 1 }); await send('dialRotate', { ticks: 2 });
   await until(() => posts.length === 1);
-  assert.equal(posts[0].body, '579');
+  assert.equal(posts[0].body, '612');
   await send('dialRotate', { ticks: -2 });
   release(); await until(() => posts.length === 2 && !client.busy);
-  assert.equal(posts[1].body, '557');
+  assert.equal(posts[1].body, '568');
   await send('dialDown'); await send('dialUp');
   assert.equal(posts.length, 3); assert.equal(posts[2].body, 'play=Play');
   await send('touchTap'); assert.equal(posts.length, 4);
@@ -55,6 +55,28 @@ test('hiding a dial or changing settings cancels unsent turns', async t => {
   await delay(10);
   await send('dialRotate', { ticks: 3 }); await send('didReceiveSettings', { settings: {} });
   await delay(180); assert.equal(posts.length, 0);
+});
+
+test('step settings apply per dial to the preview and seek, including decimals and invalid fallback', async t => {
+  const { client, posts, messages, send } = await setup(t);
+  await send('didReceiveSettings', { settings: { stepPercent: 0.5 } });
+  await send('dialRotate', { ticks: 2 });
+  const preview = messages.filter(m => m.event === 'setFeedback').at(-1).payload.replay;
+  assert.match(Buffer.from(preview.split(',')[1], 'base64').toString(), /51%/);
+  await until(() => posts.length === 1 && !client.busy);
+  assert.equal(posts[0].body, '556');
+  await send('willAppear', { settings: {} }, 'default-dial');
+  await send('dialRotate', { ticks: 1 }, 'default-dial');
+  await until(() => posts.length === 2 && !client.busy);
+  assert.equal(posts[1].body, '578');
+  await send('didReceiveSettings', { settings: { stepPercent: 5 } });
+  await send('dialRotate', { ticks: -1 });
+  await until(() => posts.length === 3 && !client.busy);
+  assert.equal(posts[2].body, '524');
+  await send('didReceiveSettings', { settings: { stepPercent: -1 } });
+  await send('dialRotate', { ticks: 1 });
+  await until(() => posts.length === 4 && !client.busy);
+  assert.equal(posts[3].body, '546');
 });
 
 test('uncertain seek discards pending turns and never retries automatically', async t => {

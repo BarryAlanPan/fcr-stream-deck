@@ -5,6 +5,9 @@ const send = value => { if (socket?.readyState === WebSocket.OPEN) socket.send(J
 const toPlugin = type => send({ event: 'sendToPlugin', action, context, payload: { type } });
 function fill() {
   el('server').value = settings.serverUrl || 'http://127.0.0.1:8085/';
+  el('dial-settings').hidden = action !== 'com.local.fcr.replay';
+  const step = settings.stepPercent;
+  el('step-percent').value = typeof step === 'number' && Number.isFinite(step) && step >= 0.1 && step <= 100 ? step : 2;
 }
 window.connectElgatoStreamDeckSocket = function (port, uuid, registerEvent, info, actionInfo) {
   const parsed = JSON.parse(actionInfo); context = parsed.context; action = parsed.action; settings = parsed.payload.settings || {};
@@ -30,11 +33,18 @@ window.connectElgatoStreamDeckSocket = function (port, uuid, registerEvent, info
   socket.onclose = () => { el('phase').textContent = 'Stream Deck disconnected'; el('save').disabled = el('retry').disabled = true; };
 };
 el('server').oninput = () => { dirty = true; };
+el('step-percent').oninput = () => { dirty = true; };
 el('save').onclick = () => {
   try {
     const url = new URL(el('server').value.trim());
     if (url.protocol !== 'http:' || !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) || url.username || url.password || url.pathname !== '/' || url.search || url.hash) throw new Error('Use a local HTTP URL, e.g. http://127.0.0.1:8085/');
-    settings = { ...settings, serverUrl: url.href };
+    const dialSettings = {};
+    if (action === 'com.local.fcr.replay') {
+      const step = el('step-percent').valueAsNumber;
+      if (!Number.isFinite(step) || step < 0.1 || step > 100) throw new Error('Choose a seek step between 0.1% and 100%.');
+      dialSettings.stepPercent = step;
+    }
+    settings = { ...settings, serverUrl: url.href, ...dialSettings };
     send({ event: 'setSettings', context, payload: settings }); dirty = false;
     el('validation').textContent = ''; toPlugin('status');
   } catch (error) { el('validation').textContent = error.message; }

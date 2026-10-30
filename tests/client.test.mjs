@@ -97,7 +97,7 @@ test('dial seeks from fresh position, sends native JSON bytes and clamps both bo
   const { client, posts } = await setup(t, () => page);
   page = connected.replace('value="0" class="slider"', 'value="546" class="slider"');
   assert.equal(await client.command('seek', 2), true);
-  assert.deepEqual(posts()[0].slice(0, 4), ['POST', 'http://127.0.0.1:8085/slider_update?568', '568', 'application/json']);
+  assert.deepEqual(posts()[0].slice(0, 4), ['POST', 'http://127.0.0.1:8085/slider_update?590', '590', 'application/json']);
   await client.command('seek', 1000); assert.equal(posts()[1][2], '1090');
   await client.command('seek', -1000); assert.equal(posts()[2][2], '1');
   page = connected;

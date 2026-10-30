@@ -1,7 +1,7 @@
 import { BY_UUID, normalizeUrl } from './actions.mjs';
 import { FcrClient } from './client.mjs';
 import { dialImage, keyImage, stateFor } from './render.mjs';
-import { canSeek } from './replay.mjs';
+import { canSeek, stepPercent } from './replay.mjs';
 
 export class DeckController {
   constructor(send, createClient = url => new FcrClient(url)) {
@@ -18,7 +18,7 @@ export class DeckController {
   }
   render(context, key) {
     const dial = key.action.id === 'replay';
-    const image = dial ? dialImage(key.client, key.pendingTicks) : keyImage(stateFor(key.action, key.client));
+    const image = dial ? dialImage(key.client, key.pendingTicks, key.settings.stepPercent) : keyImage(stateFor(key.action, key.client));
     if (image !== key.image) {
       key.image = image;
       this.send(dial ? { event: 'setFeedback', context, payload: { replay: image } } :
@@ -52,7 +52,8 @@ export class DeckController {
       this.send({ event: 'showAlert', context }); return;
     }
     // Batch rapid turns and keep new ticks while this dial's own seek is in flight.
-    key.pendingTicks = Math.max(-100, Math.min(100, key.pendingTicks + ticks));
+    const maxTicks = Math.ceil(100 / stepPercent(key.settings.stepPercent));
+    key.pendingTicks = Math.max(-maxTicks, Math.min(maxTicks, key.pendingTicks + ticks));
     this.render(context, key);
     if (!key.seekTimer && !key.seeking) {
       key.seekTimer = setTimeout(() => void this.flushSeek(context, key), 120);
@@ -62,7 +63,7 @@ export class DeckController {
     key.seekTimer = null;
     if (this.keys.get(context) !== key || !key.pendingTicks) return;
     const ticks = key.pendingTicks; key.pendingTicks = 0; key.seeking = true;
-    const ok = await key.client.command('seek', ticks);
+    const ok = await key.client.command('seek', ticks, key.settings.stepPercent);
     key.seeking = false;
     if (this.keys.get(context) !== key) return;
     if (!ok || !key.client.healthy || key.client.busy || key.client.warning) {

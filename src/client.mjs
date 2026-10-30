@@ -50,7 +50,7 @@ export class FcrClient {
     else this.phase = this.busy ? 'confirming' : 'offline';
     this.emit(); this.schedule(); return ok;
   }
-  async command(name, ticks) {
+  async command(name, ticks, step) {
     if (this.closed || this.busy || !this.healthy) return false;
     // Lock before awaiting, including across duplicate keys and different actions.
     this.busy = true; this.phase = 'preparing'; clearTimeout(this.timer); this.emit();
@@ -66,7 +66,7 @@ export class FcrClient {
     const action = this.snapshot.actions[name];
     if (action && !action.disabled && !(name === 'play' && recording)) ({ url, body } = action);
     if (name === 'seek' && Number.isSafeInteger(ticks) && ticks !== 0 && canSeek(this.snapshot)) {
-      const value = seekValue(this.snapshot.timeline, ticks);
+      const value = seekValue(this.snapshot.timeline, ticks, step);
       if (value !== this.snapshot.timeline.value) {
         body = String(value); type = 'application/json';
         url = new URL(`slider_update?${body}`, this.url).href;

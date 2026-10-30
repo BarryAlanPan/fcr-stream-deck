@@ -48,7 +48,7 @@ export function keySvg(view) {
 }
 export const keyImage = view => `data:image/svg+xml;base64,${Buffer.from(keySvg(view)).toString('base64')}`;
 
-export function dialSvg(client, pendingTicks = 0) {
+export function dialSvg(client, pendingTicks = 0, step) {
   const snapshot = client?.snapshot, timeline = snapshot?.timeline;
   const playing = replayPlaying(snapshot);
   const command = snapshot?.actions[replayCommand(snapshot)];
@@ -57,7 +57,7 @@ export function dialSvg(client, pendingTicks = 0) {
   let color = playing ? '#69e3c0' : '#dce7f4';
   const fresh = client?.healthy && timeline;
   const progress = fresh ? Math.max(0, Math.min(100, 100 *
-    ((pendingTicks ? seekValue(timeline, pendingTicks) : timeline.value) - timeline.min) / (timeline.max - timeline.min))) : null;
+    ((pendingTicks ? seekValue(timeline, pendingTicks, step) : timeline.value) - timeline.min) / (timeline.max - timeline.min))) : null;
   if (!client) { state = 'SETUP'; hint = 'Check server settings'; color = '#f28778'; }
   else if (client.warning) { state = 'CHECK FCR'; hint = 'Check before retrying'; color = '#f3c66c'; }
   else if (client.busy || pendingTicks) { state = pendingTicks ? 'SEEKING' : 'CHECKING'; hint = 'Updating replay'; color = '#f3c66c'; }
@@ -68,4 +68,4 @@ export function dialSvg(client, pendingTicks = 0) {
   const label = progress === null ? '--' : `${Math.round(progress)}%`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 200 100"><rect width="200" height="100" fill="#101923"/><text x="12" y="19" fill="${color}" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="1">${state}</text><text x="188" y="49" text-anchor="end" fill="${color}" font-family="Arial,sans-serif" font-size="28" font-weight="700">${label}</text><g transform="translate(12 28) scale(.46)" fill="none" stroke="${color}" color="${color}" stroke-width="3.5">${GLYPHS[playing ? 'stop' : 'play']}</g><rect x="12" y="59" width="176" height="8" rx="4" fill="#304155"/><rect x="12" y="59" width="${176 * (progress || 0) / 100}" height="8" rx="4" fill="${color}"/><text x="100" y="88" text-anchor="middle" fill="${color}" font-family="Arial,sans-serif" font-size="12">${escape(hint)}</text></svg>`;
 }
-export const dialImage = (client, ticks) => `data:image/svg+xml;base64,${Buffer.from(dialSvg(client, ticks)).toString('base64')}`;
+export const dialImage = (client, ticks, step) => `data:image/svg+xml;base64,${Buffer.from(dialSvg(client, ticks, step)).toString('base64')}`;

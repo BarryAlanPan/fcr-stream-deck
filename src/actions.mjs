@@ -3,7 +3,7 @@ export const DEFAULT_URL = 'http://127.0.0.1:8085/';
 export const ACTIONS = [
   ['startrecord', 'Record / Stop', 'Record', 'Start recording; press again to stop recording. FCR may open its save dialog.'],
   ['play', 'Play / Pause', 'Play', 'Play, pause, or resume using the current FCR action.'],
-  ['replay', 'Replay Dial', 'Replay', 'Turn to seek (1% per tick). Press the dial or tap its display to start/stop replay.'],
+  ['replay', 'Replay Dial', 'Replay', 'Turn to seek (configurable step, default 2% per tick). Press the dial or tap its display to start/stop replay.'],
   ['loadR', 'Load Replay', 'Load', 'Open FCR’s desktop recording picker.'],
   ['goStart', 'Go to Start', 'Start', 'Go to the start of the replay.'],
   ['backw', 'Backward', 'Back', 'Use FCR’s native backward action.'],

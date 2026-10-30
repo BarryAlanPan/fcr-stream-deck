@@ -10,5 +10,8 @@ export const canSeek = snapshot => {
     [timeline.min, timeline.max, timeline.value].every(Number.isSafeInteger) &&
     timeline.max > timeline.min;
 };
-export const seekValue = (timeline, ticks) => Math.max(timeline.min, Math.min(timeline.max,
-  timeline.value + ticks * Math.max(1, Math.round((timeline.max - timeline.min) / 100))));
+export const DEFAULT_STEP_PERCENT = 2;
+export const stepPercent = value => typeof value === 'number' && Number.isFinite(value) && value >= 0.1 && value <= 100
+  ? value : DEFAULT_STEP_PERCENT;
+export const seekValue = (timeline, ticks, step) => Math.max(timeline.min, Math.min(timeline.max,
+  timeline.value + ticks * Math.max(1, Math.round((timeline.max - timeline.min) * stepPercent(step) / 100))));

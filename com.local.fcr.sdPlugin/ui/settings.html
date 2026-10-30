@@ -5,6 +5,7 @@
 </style></head><body>
 <h1 id="title">FlightControlReplay</h1><p id="description">Direct controls for your local FCR server.</p>
 <label for="server">FCR server</label><input id="server" type="url" placeholder="http://127.0.0.1:8085/" spellcheck="false"><small>Local HTTP URL. Keys using the same server share one command lock.</small>
+<div id="dial-settings" hidden><label for="step-percent">Seek step (% per tick)</label><input id="step-percent" type="number" min="0.1" max="100" step="any" value="2" aria-describedby="step-help"><small id="step-help">Default: 2%. Choose 0.1–100% of the replay per dial tick.</small></div>
 <button id="save" disabled>Save settings</button><p id="validation" class="error" role="alert"></p>
 <div class="status" role="status" aria-live="polite"><div id="phase">Connecting to Stream Deck…</div><p id="status"></p><p id="error" class="error"></p><p id="warning" class="warning"></p></div>
 <button id="retry" disabled>Retry status</button><button id="acknowledge" hidden>I checked FCR</button>
